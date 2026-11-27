@@ -35,6 +35,7 @@ form.addEventListener('submit', async (event) => {
 
   const response = await fetch(`/api/auth/${isRegister ? 'register' : 'login'}`, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   });
