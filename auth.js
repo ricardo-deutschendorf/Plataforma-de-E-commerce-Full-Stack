@@ -41,11 +41,13 @@ form.addEventListener('submit', async (event) => {
   });
   const result = await response.json();
   if (!response.ok) {
+    error.setAttribute('role', 'alert');
     error.textContent = result.error || 'Não foi possível concluir a operação.';
     return;
   }
   if (isRegister) {
     error.className = 'form-success';
+    error.setAttribute('role', 'status');
     error.textContent = result.message;
     form.reset();
     return;

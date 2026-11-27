@@ -51,7 +51,7 @@ function renderProducts() {
       <div class="product-image">${product.imageUrl ? `<img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.name)}">` : "<span>SEM IMAGEM</span>"}</div>
       <div class="product-info"><span class="product-category">${escapeHtml(product.category)}</span><h3>${escapeHtml(product.name)}</h3><p>${escapeHtml(product.description || "Produto disponível na loja.")}</p>
       <div class="product-bottom"><strong>${money(product.price)}</strong><span>${product.stock} em estoque</span></div>
-      <div class="product-actions"><button class="button button-primary" data-action="buy" data-id="${product.id}" ${product.stock < 1 ? "disabled" : ""}>Comprar via Pix</button>${currentUser ? `<button class="text-button" data-action="edit" data-id="${product.id}">Editar</button><button class="text-button danger" data-action="delete" data-id="${product.id}">Excluir</button>` : ""}</div></div>
+      <div class="product-actions"><button class="button button-primary" data-action="buy" data-id="${product.id}" ${product.stock < 1 ? "disabled" : ""}>Comprar via Pix</button>${currentUser?.id === product.ownerId ? `<button class="text-button" data-action="edit" data-id="${product.id}">Editar</button><button class="text-button danger" data-action="delete" data-id="${product.id}">Excluir</button>` : ""}</div></div>
     </article>`,
     )
     .join("");

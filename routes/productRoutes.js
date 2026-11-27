@@ -6,7 +6,6 @@ const crypto = require('crypto');
 const productModel = require('../models/productModel');
 const { validateProduct } = require('../functions/productValidation');
 const { requireAuth } = require('../public/middleware/requireAuth');
-const { requireAdmin } = require('../functions/requireAdmin');
 
 const router = express.Router();
 const uploadDirectory = path.join(__dirname, '..', 'public', 'uploads', 'products');
@@ -38,6 +37,19 @@ const uploadImage = (req, res, next) => upload.single('image')(req, res, (error)
   next();
 });
 
+async function requireProductOwner(req, res, next) {
+  try {
+    const product = await productModel.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: 'Produto não encontrado.' });
+    if (product.ownerId !== req.session.user.id) {
+      return res.status(403).json({ error: 'Somente quem criou o produto pode editá-lo ou excluí-lo.' });
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
 router.get('/', async (req, res, next) => {
   try {
     res.json(await productModel.findAll());
@@ -46,20 +58,23 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-router.post('/', requireAuth, requireAdmin, uploadImage, async (req, res, next) => {
+router.post('/', requireAuth, uploadImage, async (req, res, next) => {
   try {
     const parsed = validateProduct({
       ...req.body,
       imageUrl: req.file ? `/uploads/products/${req.file.filename}` : ''
     });
     if (parsed.error) return res.status(400).json({ error: parsed.error });
-    res.status(201).json(await productModel.create(parsed.value));
+    res.status(201).json(await productModel.create({
+      ...parsed.value,
+      ownerId: req.session.user.id
+    }));
   } catch (error) {
     next(error);
   }
 });
 
-router.put('/:id', requireAuth, requireAdmin, uploadImage, async (req, res, next) => {
+router.put('/:id', requireAuth, requireProductOwner, uploadImage, async (req, res, next) => {
   try {
     const currentProduct = await productModel.findById(req.params.id);
     if (!currentProduct) return res.status(404).json({ error: 'Produto não encontrado.' });
@@ -68,16 +83,17 @@ router.put('/:id', requireAuth, requireAdmin, uploadImage, async (req, res, next
       imageUrl: req.file ? `/uploads/products/${req.file.filename}` : currentProduct.imageUrl
     });
     if (parsed.error) return res.status(400).json({ error: parsed.error });
-    const product = await productModel.update(req.params.id, parsed.value);
+    const product = await productModel.update(req.params.id, parsed.value, req.session.user.id);
+    if (!product) return res.status(404).json({ error: 'Produto não encontrado.' });
     res.json(product);
   } catch (error) {
     next(error);
   }
 });
 
-router.delete('/:id', requireAuth, requireAdmin, async (req, res, next) => {
+router.delete('/:id', requireAuth, requireProductOwner, async (req, res, next) => {
   try {
-    if (!await productModel.remove(req.params.id)) {
+    if (!await productModel.remove(req.params.id, req.session.user.id)) {
       return res.status(404).json({ error: 'Produto não encontrado.' });
     }
     res.status(204).end();
