@@ -23,7 +23,7 @@ async function sendVerificationEmail({ email, name, token, baseUrl }) {
   const url = (
     baseUrl ||
     process.env.APP_URL ||
-    "http://localhost:3000"
+    "'https://ecommercetest.onrender.com'"
   ).replace(/\/$/, "");
   const verificationUrl = `${url}/verify-email?token=${encodeURIComponent(token)}`;
   const response = await fetch(BREVO_URL, {
