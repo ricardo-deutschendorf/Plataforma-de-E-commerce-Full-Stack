@@ -1,54 +1,105 @@
-const crypto = require('crypto');
-const { readJson, writeJson } = require('../functions/fileStore');
+const pool = require('../functions/db');
 const { hashPassword } = require('../functions/password');
 
-const DATA_FILE = 'data/users.json';
+const COLUMNS = `
+  id,
+  name,
+  email,
+  password_hash AS password,
+  email_verified_at AS "emailVerifiedAt",
+  email_verification_token_hash AS "emailVerificationTokenHash",
+  email_verification_expires_at AS "emailVerificationExpiresAt",
+  created_at AS "createdAt"
+`;
 
 async function findByEmail(email) {
-  const users = await readJson(DATA_FILE, []);
-  return users.find((user) => user.email === email.toLowerCase());
+  const { rows } = await pool.query(
+    `
+      SELECT ${COLUMNS}
+      FROM users
+      WHERE LOWER(email) = LOWER($1)
+      LIMIT 1
+    `,
+    [email]
+  );
+
+  return rows[0] || null;
 }
 
 async function create({ name, email, password }) {
-  const users = await readJson(DATA_FILE, []);
-  const user = {
-    id: crypto.randomUUID(),
-    name,
-    email: email.toLowerCase(),
-    password: hashPassword(password),
-    emailVerifiedAt: null,
-    createdAt: new Date().toISOString()
-  };
-  users.push(user);
-  await writeJson(DATA_FILE, users);
-  return user;
+  const passwordHash = hashPassword(password);
+
+  const { rows } = await pool.query(
+    `
+      INSERT INTO users (
+        name,
+        email,
+        password_hash
+      )
+      VALUES ($1, LOWER($2), $3)
+      RETURNING ${COLUMNS}
+    `,
+    [
+      name,
+      email,
+      passwordHash
+    ]
+  );
+
+  console.log('Usuário gravado na Neon:', {
+    id: rows[0]?.id,
+    email: rows[0]?.email
+  });
+
+  return rows[0];
 }
 
-async function setEmailVerification(userId, tokenHash, expiresAt) {
-  const users = await readJson(DATA_FILE, []);
-  const user = users.find((item) => item.id === userId);
-  if (!user) return null;
+async function setEmailVerification(
+  userId,
+  tokenHash,
+  expiresAt
+) {
+  const { rows } = await pool.query(
+    `
+      UPDATE users
+      SET
+        email_verification_token_hash = $1,
+        email_verification_expires_at = $2
+      WHERE id::text = $3
+      RETURNING ${COLUMNS}
+    `,
+    [
+      tokenHash,
+      expiresAt,
+      userId
+    ]
+  );
 
-  user.emailVerificationTokenHash = tokenHash;
-  user.emailVerificationExpiresAt = expiresAt;
-  await writeJson(DATA_FILE, users);
-  return user;
+  return rows[0] || null;
 }
 
 async function verifyEmail(tokenHash) {
-  const users = await readJson(DATA_FILE, []);
-  const user = users.find((item) =>
-    item.emailVerificationTokenHash === tokenHash &&
-    item.emailVerificationExpiresAt &&
-    new Date(item.emailVerificationExpiresAt) > new Date()
+  const { rows } = await pool.query(
+    `
+      UPDATE users
+      SET
+        email_verified_at = NOW(),
+        email_verification_token_hash = NULL,
+        email_verification_expires_at = NULL
+      WHERE
+        email_verification_token_hash = $1
+        AND email_verification_expires_at > NOW()
+      RETURNING ${COLUMNS}
+    `,
+    [tokenHash]
   );
-  if (!user) return null;
 
-  user.emailVerifiedAt = new Date().toISOString();
-  delete user.emailVerificationTokenHash;
-  delete user.emailVerificationExpiresAt;
-  await writeJson(DATA_FILE, users);
-  return user;
+  return rows[0] || null;
 }
 
-module.exports = { findByEmail, create, setEmailVerification, verifyEmail };
+module.exports = {
+  findByEmail,
+  create,
+  setEmailVerification,
+  verifyEmail
+};
