@@ -10,6 +10,7 @@
     "seed": "node public/seeders/pastes.seeder.js && node public/seeders/products.seeder.js"
   },
   "dependencies": {
+    "connect-pg-simple": "^10.0.0",
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
     "express-session": "^1.19.0",
