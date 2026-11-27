@@ -9,7 +9,6 @@ const authRoutes = require("./routes/authRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const productRoutes = require("./routes/productRoutes");
 const { requireAuth } = require("./public/middleware/requireAuth");
-const session = require("express-session");
 const pgSession = require("connect-pg-simple")(session);
 
 dns.setDefaultResultOrder("ipv4first");
@@ -25,6 +24,7 @@ app.use(
       conString: process.env.DATABASE_URL,
       createTableIfMissing: true,
       tableName: "user_sessions",
+      
     }),
 
     name: "pasteboard.sid",
