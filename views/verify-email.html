@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Verificação de e-mail | Pasteboard</title>
+    <link rel="stylesheet" href="/css/styles.css">
+  </head>
+  <body>
+    <main class="auth-shell">
+      <div class="auth-visual" aria-hidden="true"><span class="auth-orbit"></span><strong>ALMOST<br>THERE<span>.</span></strong><small>PASTEBOARD / 001</small></div>
+      <section class="auth-card">
+        <a class="auth-brand" href="/"><span class="brand-mark">P</span> PASTEBOARD</a>
+        <p class="eyebrow">ÚLTIMO PASSO</p>
+        <h1 id="verifyTitle">Verificando...</h1>
+        <p class="subtitle" id="verifyMessage">Aguarde enquanto confirmamos seu e-mail.</p>
+        <p class="auth-link"><a href="/login">Ir para o login</a></p>
+      </section>
+    </main>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      fetch(`/api/auth/verify-email?token=${encodeURIComponent(params.get('token') || '')}`)
+        .then(async (response) => {
+          const result = await response.json();
+          document.querySelector('#verifyTitle').textContent = response.ok ? 'E-mail confirmado!' : 'Não foi possível confirmar';
+          document.querySelector('#verifyMessage').textContent = result.message || result.error;
+        })
+        .catch(() => {
+          document.querySelector('#verifyTitle').textContent = 'Erro de conexão';
+          document.querySelector('#verifyMessage').textContent = 'Tente novamente mais tarde.';
+        });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Entrar | Pasteboard</title>
+    <link rel="stylesheet" href="/css/styles.css">
+  </head>
+  <body>
+    <main class="auth-shell">
+      <div class="auth-visual" aria-hidden="true"><span class="auth-orbit"></span><strong>GOOD<br>THINGS<br>ONLY<span>.</span></strong><small>PASTEBOARD / 001</small></div>
+      <section class="auth-card">
+        <a class="auth-brand" href="/"><span class="brand-mark">P</span> PASTEBOARD</a>
+        <p class="eyebrow">BEM-VINDO DE VOLTA</p>
+        <h1>Entrar</h1>
+        <p class="subtitle">Acesse sua curadoria e continue de onde parou.</p>
+        <form id="authForm">
+          <label>E-mail <input id="email" type="email" required maxlength="254" autocomplete="email" placeholder="nome@email.com"></label>
+          <label>Senha <input id="password" type="password" required minlength="8" maxlength="72" autocomplete="current-password" placeholder="Sua senha"></label>
+          <p class="form-error" id="authError" role="alert"></p>
+          <button class="button button-primary auth-submit" type="submit">Entrar</button>
+        </form>
+        <p class="auth-link">Ainda não tem conta? <a href="/register">Criar conta</a></p>
+      </section>
+    </main>
+    <script src="/auth.js"></script>
+  </body>
+</html>
